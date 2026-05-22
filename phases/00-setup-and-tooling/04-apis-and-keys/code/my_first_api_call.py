@@ -1,5 +1,6 @@
 from anthropic import Anthropic
 import os, json, urllib.request
+import time
 
 client = Anthropic()
 
@@ -51,7 +52,7 @@ def call_with_http():
         "model": "claude-sonnet-4-20250514",
         "max_tokens": 256,
         "messages": [{"role": "user", "content": "What is a neural network in one sentence?"}],
-    }).encode()
+    }).encode() # converts string to bytes to send over the network
 
     req = urllib.request.Request(url, data=body, headers=headers, method="POST")
     with urllib.request.urlopen(req) as resp:
@@ -59,6 +60,29 @@ def call_with_http():
         print(f"Raw HTTP response: {result['content'][0]['text']}")
         print(f"Tokens used: {result['usage']['input_tokens']} in, {result['usage']['output_tokens']} out")
 
+def call_with_streaming():
+    try:
+        import anthropic
+    except ImportError:
+        print("Install the SDK: pip install anthropic")
+        return 
+    
+    client = anthropic.Anthropic()
+    print("Streaming response: ", end="", flush=True)
+
+    with client.messages.stream(
+        model="claude-sonnet-4-20250514",
+        max_tokens=256,
+        messages=[
+            {"role": "user", "content": "What is a neural network in one sentence?"}
+        ]
+    ) as stream:
+        for text in stream.text_stream:
+            print(text, end="", flush=True)
+            time.sleep(0.5)
+    print()
+    message = stream.get_final_message()
+    calculate_cost(message.usage)
 
 
 if __name__ == "__main__":
@@ -67,3 +91,5 @@ if __name__ == "__main__":
     call_with_sdk()
     print("\n2. Using raw HTTP:")
     call_with_http()
+    print("\n3. Using streaming:")
+    call_with_streaming()
