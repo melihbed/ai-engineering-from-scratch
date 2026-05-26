@@ -1,0 +1,24 @@
+services:
+  api:
+    build: ./api
+    container_name: api_c
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./api:/app
+      - /app/node_modules
+    environment:
+      - CI=true
+
+  react-app:
+    build: ./react-app
+    container_name: react_app_c
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./react-app:/app
+      - /app/node_modules
+    environment:
+      - PNPM_SKIP_DEPS_CHECK=true
+    stdin_open: true
+    tty: true
